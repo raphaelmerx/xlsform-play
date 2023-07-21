@@ -7,7 +7,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+#root {
+    height: 100vh;
+    overflow: auto;
 }
+
+#root .scrollable-allotment, #root .scrollable-allotment .split-view-view {
+    overflow: auto;
+}
+
+.full-size-iframe {
+    width: 100%;
+    height: 100vh;
+    border: none;
+  }

@@ -3,6 +3,10 @@ import Handsontable from 'handsontable/base';
 import { HotTable } from '@handsontable/react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { registerAllModules } from 'handsontable/registry';
+
+import { Allotment } from "allotment";
+import "allotment/dist/style.css";
+
 import 'handsontable/dist/handsontable.full.min.css';
 import 'react-tabs/style/react-tabs.css';
 import { read, utils, write } from 'xlsx';
@@ -13,6 +17,7 @@ registerAllModules();
 
 function App() {
   const [hotData, setHotData] = useState({});
+  const [previewUrl, setPreviewUrl] = useState('');
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -80,39 +85,49 @@ function App() {
       const data = await response.json();
       const xml_url = data.xml_url;
       const previewUrl = `https://staging.enketo.getodk.org/preview?form=${xml_url}`;
-      console.log(previewUrl);
+      setPreviewUrl(previewUrl);
 
     } catch (error) {
-      console.error('There was a problem with the request:', error);
+      alert('There was a problem with the request:', error)
     }
   }
  
-
   return (
-    <div className="App">
-      <input type="file" onChange={handleFileChange} accept=".xls,.xlsx" />
-      {Object.keys(hotData).length > 0 && (<button onClick={handleFileDownload}>Download</button>)}
-      {Object.keys(hotData).length > 0 && (<button onClick={handleFilePreview}>Preview</button>)}
-      <Tabs>
-        <TabList>
+    <Allotment defaultSizes={[100, 200]} className='scrollable-allotment'>
+      <Allotment.Pane minSize={200} preferredSize="80%">
+        <div className="App">
+          <input type="file" onChange={handleFileChange} accept=".xls,.xlsx" />
+          {Object.keys(hotData).length > 0 && (<button onClick={handleFileDownload}>Download</button>)}
+          {Object.keys(hotData).length > 0 && (<button onClick={handleFilePreview}>Preview</button>)}
+          <Tabs>
+            <TabList>
+                {Object.keys(hotData).map((sheetName) => (
+                <Tab>{sheetName}</Tab>
+                ))}
+            </TabList>
             {Object.keys(hotData).map((sheetName) => (
-            <Tab>{sheetName}</Tab>
+              <TabPanel>
+                <HotTable
+                  data={hotData[sheetName]}
+                  rowHeaders={true}
+                  colHeaders={true}
+                  height="auto"
+                  colWidths={100}
+                  licenseKey="non-commercial-and-evaluation" // for non-commercial use only
+                />
+              </TabPanel>
             ))}
-        </TabList>
-        {Object.keys(hotData).map((sheetName) => (
-          <TabPanel>
-            <HotTable
-              data={hotData[sheetName]}
-              rowHeaders={true}
-              colHeaders={true}
-              height="auto"
-              colWidths={100}
-              licenseKey="non-commercial-and-evaluation" // for non-commercial use only
-            />
-          </TabPanel>
-        ))}
-      </Tabs>
-    </div>
+          </Tabs>
+        </div>
+      </Allotment.Pane>
+      {previewUrl && (
+        <Allotment.Pane minSize={200}>
+          <div>
+            {previewUrl && <iframe src={previewUrl} title="Preview" className="full-size-iframe" />}
+          </div>
+        </Allotment.Pane>
+      )}
+    </Allotment>
   );
 }
 
