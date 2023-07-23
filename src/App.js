@@ -3,6 +3,14 @@ import { HotTable } from '@handsontable/react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { registerAllModules } from 'handsontable/registry';
 
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
@@ -43,7 +51,8 @@ function App() {
       const bstr = evt.target.result;
       setHotData(getSheetsData(bstr))
     };
-    reader.readAsBinaryString(file);
+    if (file) reader.readAsBinaryString(file);
+    setSelectedFile('');
   }
 
   const handleSelectChange = async (event) => {
@@ -118,28 +127,79 @@ function App() {
   }
  
   return (
-    <Allotment defaultSizes={[100, 200]} className='scrollable-allotment'>
+    <Allotment defaultSizes={[100, 200]} className="scrollable-allotment">
       <Allotment.Pane minSize={200} preferredSize="80%">
         <div className="App">
-          <input type="file" onChange={handleFileUpload} accept=".xls,.xlsx" />
-          OR
-          <select onChange={handleSelectChange}>
-            <option value="">Select an example spreadsheet</option>
-            <option value="anc_visit.xlsx">anc_visit.xlsx</option>
-            <option value="baseline_household_survey.xlsx">baseline_household_survey.xlsx</option>
-            <option value="fatal_injury_surveillance_form.xlsx">fatal_injury_surveillance_form.xlsx</option>
-            <option value="household_water_survey.xlsx">household_water_survey.xlsx</option>
-            <option value="monthly_project_report.xlsx">monthly_project_report.xlsx</option>
-            <option value="shelter_material_survey.xlsx">shelter_material_survey.xlsx</option>
-            <option value="spraying_survey.xlsx">spraying_survey.xlsx</option>
-          </select>
-          {Object.keys(hotData).length > 0 && (<button onClick={handleFileDownload}>Download</button>)}
-          {Object.keys(hotData).length > 0 && (<button onClick={handleFilePreview}>Preview</button>)}
+          <Grid container spacing={1} direction="row" alignItems={"center"} marginBottom={2}>
+            <Grid item md={2} xs={4} textAlign={"center"}>
+              <input
+                accept=".xls,.xlsx"
+                style={{ display: "none" }}
+                id="raised-button-file"
+                type="file"
+                onChange={handleFileUpload}
+              />
+              <label htmlFor="raised-button-file">
+                <Button variant="outlined" component="span">
+                  Upload File
+                </Button>
+              </label>
+            </Grid>
+            <Grid item md={1} xs={2} textAlign={"center"}>
+              <Box> OR </Box>
+            </Grid>
+            <Grid item md={5} xs={7} textAlign={"center"}>
+              <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+                <InputLabel id="example-file-select">
+                  Select an example file
+                </InputLabel>
+                <Select
+                  labelId="example-file-select"
+                  value={selectedFile}
+                  onChange={handleSelectChange}
+                >
+                  <MenuItem value="anc_visit.xlsx">anc_visit.xlsx</MenuItem>
+                  <MenuItem value="baseline_household_survey.xlsx">
+                    baseline_household_survey.xlsx
+                  </MenuItem>
+                  <MenuItem value="fatal_injury_surveillance_form.xlsx">
+                    fatal_injury_surveillance_form.xlsx
+                  </MenuItem>
+                  <MenuItem value="household_water_survey.xlsx">
+                    household_water_survey.xlsx
+                  </MenuItem>
+                  <MenuItem value="monthly_project_report.xlsx">
+                    monthly_project_report.xlsx
+                  </MenuItem>
+                  <MenuItem value="shelter_material_survey.xlsx">
+                    shelter_material_survey.xlsx
+                  </MenuItem>
+                  <MenuItem value="spraying_survey.xlsx">
+                    spraying_survey.xlsx
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            {Object.keys(hotData).length > 0 && (
+              <>
+                <Grid item md={2} xs={6} textAlign={"center"}>
+                  <Button variant="outlined" onClick={handleFileDownload}>
+                    Download
+                  </Button>
+                </Grid>
+                <Grid item md={2} xs={6} textAlign={"center"}>
+                  <Button variant="contained" onClick={handleFilePreview}>
+                    Preview
+                  </Button>
+                </Grid>
+              </>
+            )}
+          </Grid>
           <Tabs>
             <TabList>
-                {Object.keys(hotData).map((sheetName) => (
+              {Object.keys(hotData).map((sheetName) => (
                 <Tab key={sheetName}>{sheetName}</Tab>
-                ))}
+              ))}
             </TabList>
             {Object.keys(hotData).map((sheetName) => (
               <TabPanel key={sheetName}>
@@ -163,7 +223,13 @@ function App() {
       {previewUrl && (
         <Allotment.Pane minSize={200}>
           <div>
-            {previewUrl && <iframe src={previewUrl} title="Preview" className="full-size-iframe" />}
+            {previewUrl && (
+              <iframe
+                src={previewUrl}
+                title="Preview"
+                className="full-size-iframe"
+              />
+            )}
           </div>
         </Allotment.Pane>
       )}
