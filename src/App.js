@@ -23,24 +23,30 @@ import { saveAs } from 'file-saver';
 registerAllModules();
 
 const getSheetsData = (file) => {
-      const wb = read(file, { type: 'binary' });
+      const wb = read(file, { type: "binary", cellStyles: true });
 
       // Get all worksheets
       const sheetNames = wb.SheetNames;
       let sheetsData = {};
+      let sheetColumnWidths = {};
 
       sheetNames.forEach((name) => {
         const ws = wb.Sheets[name];
+
+        const colsWidths = ws["!cols"]?.map((col) => col?.wpx || 100) || [];
+        sheetColumnWidths[name] = colsWidths;
+
         let data = utils.sheet_to_json(ws, { header: 1 });
         data = data.filter((row) => row.length);
 
         sheetsData[name] = data;
       });
-      return sheetsData;
+      return {sheetsData, sheetColumnWidths};
 }
 
 function App() {
   const [hotData, setHotData] = useState({});
+  const [colWidths, setColWidths] = useState({});
   const [selectedFile, setSelectedFile] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
 
@@ -49,7 +55,9 @@ function App() {
     const reader = new FileReader();
     reader.onload = (evt) => {
       const bstr = evt.target.result;
-      setHotData(getSheetsData(bstr))
+      const {sheetsData, sheetColumnWidths} = getSheetsData(bstr);
+      setHotData(sheetsData);
+      setColWidths(sheetColumnWidths);
     };
     if (file) reader.readAsBinaryString(file);
     setSelectedFile('');
@@ -66,7 +74,9 @@ function App() {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       const bstr = evt.target.result;
-      setHotData(getSheetsData(bstr))
+      const {sheetsData, sheetColumnWidths} = getSheetsData(bstr);
+      setHotData(sheetsData);
+      setColWidths(sheetColumnWidths);
     };
     reader.readAsArrayBuffer(file);
   };
@@ -207,13 +217,14 @@ function App() {
                   data={hotData[sheetName]}
                   rowHeaders={true}
                   colHeaders={true}
-                  height="auto"
-                  colWidths={100}
+                  height="100vh"
+                  colWidths={colWidths[sheetName]}
                   licenseKey="non-commercial-and-evaluation" // for non-commercial use only
                   dropdownMenu={true}
                   contextMenu={true}
                   manualRowMove={true}
                   manualColumnResize={true}
+                  fixedRowsTop={1}
                 />
               </TabPanel>
             ))}
