@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { HotTable } from '@handsontable/react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { registerAllModules } from 'handsontable/registry';
+import { registerRenderer, textRenderer } from 'handsontable/renderers';
 
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -43,6 +44,18 @@ const getSheetsData = (file) => {
       });
       return {sheetsData, sheetColumnWidths};
 }
+
+function beginGroupRowRenderer(instance, td, row, col, prop, value, cellProperties) {
+  textRenderer.apply(this, arguments);  // Use the default text renderer first
+
+  const rowData = instance.getDataAtRow(row); // Get data for the row
+
+  if (rowData[0] === 'begin group') {
+    td.style.backgroundColor = '#FDE9D9';
+  }
+}
+
+registerRenderer('beginGroupRowRenderer', beginGroupRowRenderer);  // Register the renderer
 
 function App() {
   const [hotData, setHotData] = useState({});
@@ -205,6 +218,7 @@ function App() {
               </>
             )}
           </Grid>
+
           <Tabs>
             <TabList>
               {Object.keys(hotData).map((sheetName) => (
@@ -212,7 +226,7 @@ function App() {
               ))}
             </TabList>
             {Object.keys(hotData).map((sheetName) => (
-              <TabPanel key={sheetName}>
+              <TabPanel key={`${selectedFile}_${sheetName}`}>
                 <HotTable
                   data={hotData[sheetName]}
                   rowHeaders={true}
@@ -225,6 +239,15 @@ function App() {
                   manualRowMove={true}
                   manualColumnResize={true}
                   fixedRowsTop={1}
+                  cells={function(row, col) {
+                    const cellProperties = {};
+
+                    if (this.instance.getDataAtCell(row, 0) === 'begin group') {
+                      cellProperties.renderer = 'beginGroupRowRenderer';
+                    }
+
+                    return cellProperties;
+                  }}
                 />
               </TabPanel>
             ))}
