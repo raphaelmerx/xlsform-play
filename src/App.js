@@ -20,7 +20,7 @@ import 'react-tabs/style/react-tabs.css';
 import { read, utils, write } from 'xlsx';
 import { saveAs } from 'file-saver';
 
-import { question_type_autocomplete } from './utils';
+import { question_type_autocomplete, surveyContextMenu } from './utils';
 
 registerAllModules();
 
@@ -234,7 +234,6 @@ function App() {
                   colWidths={colWidths[sheetName]}
                   licenseKey="non-commercial-and-evaluation" // for non-commercial use only
                   dropdownMenu={true}
-                  contextMenu={true}
                   manualRowMove={true}
                   manualColumnResize={true}
                   fixedRowsTop={1}
@@ -247,6 +246,7 @@ function App() {
 
                     return cellProperties;
                   }}
+                  contextMenu={sheetName === 'survey' ? surveyContextMenu : true}
                 />
               </TabPanel>
             ))}
