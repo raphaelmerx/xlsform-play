@@ -63,6 +63,8 @@ function beginGroupRowRenderer(instance, td, row, col, prop, value, cellProperti
 
   if (rowData[0] === 'begin group') {
     td.style.backgroundColor = '#FDE9D9';
+  } else if (rowData[0] === 'begin repeat') {
+    td.style.backgroundColor = '#E5DFEC';
   }
 }
 
@@ -239,7 +241,7 @@ function App() {
                   cells={function (row, col) {
                     const cellProperties = {};
 
-                    if (this.instance.getDataAtCell(row, 0) === 'begin group') {
+                    if (['begin group', 'begin repeat'].indexOf(this.instance.getDataAtCell(row, 0) > -1)) {
                       cellProperties.renderer = 'beginGroupRowRenderer';
                     }
 
