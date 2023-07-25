@@ -123,7 +123,8 @@ function App() {
     let formData = new FormData();
     formData.append("file", fileBlob, "spreadsheet.xlsx");
     try {
-      const response = await fetch('https://xlsform-online.fly.dev/api/xform/', {
+      const url = process.env.NODE_ENV === 'development' ? 'http://localhost:8000/api/xform/' : 'https://xlsform-online.fly.dev/api/xform/';
+      const response = await fetch(url, {
         method: 'POST',
         body: formData
       });
