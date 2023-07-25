@@ -20,6 +20,8 @@ import 'react-tabs/style/react-tabs.css';
 import { read, utils, write } from 'xlsx';
 import { saveAs } from 'file-saver';
 
+import { question_type_autocomplete } from './utils';
+
 registerAllModules();
 
 const getSheetsData = file => {
@@ -42,6 +44,16 @@ const getSheetsData = file => {
     sheetsData[name] = data;
   });
   return { sheetsData, sheetColumnWidths };
+};
+
+const columnConfigGetter = i => {
+  if (i === 0) {
+    return {
+      type: 'autocomplete',
+      source: question_type_autocomplete,
+    };
+  }
+  return {};
 };
 
 function beginGroupRowRenderer(instance, td, row, col, prop, value, cellProperties) {
@@ -216,6 +228,7 @@ function App() {
                   data={hotData[sheetName]}
                   rowHeaders={true}
                   height="100vh"
+                  columns={columnConfigGetter}
                   colWidths={colWidths[sheetName]}
                   licenseKey="non-commercial-and-evaluation" // for non-commercial use only
                   dropdownMenu={true}
