@@ -229,6 +229,7 @@ function App() {
                 <HotTable
                   data={hotData[sheetName]}
                   rowHeaders={true}
+                  colHeaders={true}
                   height="100vh"
                   columns={columnConfigGetter}
                   colWidths={colWidths[sheetName]}
