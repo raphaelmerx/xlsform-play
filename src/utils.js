@@ -52,7 +52,7 @@ export const surveyContextMenu = {
         var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
         this.alter('insert_row_below', latestSelection.row, 1, 'ContextMenu.rowBelow');
         var newRowIndex = latestSelection.row + 1;
-        this.populateFromArray(newRowIndex, 0, [['text', 'my_id', 'My Label']]);
+        this.populateFromArray(newRowIndex, 0, [['text', 'question_id', 'Question Label']]);
       },
     },
     insert_select_one_question: {
@@ -61,7 +61,7 @@ export const surveyContextMenu = {
         var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
         this.alter('insert_row_below', latestSelection.row, 1, 'ContextMenu.rowBelow');
         var newRowIndex = latestSelection.row + 1;
-        this.populateFromArray(newRowIndex, 0, [['select_one [list_name]', 'my_id', 'My Label']]);
+        this.populateFromArray(newRowIndex, 0, [['select_one [list_name]', 'question_id', 'Question Label']]);
       },
     },
     insert_group: {
@@ -74,6 +74,18 @@ export const surveyContextMenu = {
         this.populateFromArray(groupStartIndex, 0, [['begin group', 'group_id', 'Group label']]);
         this.populateFromArray(groupStartIndex + 1, 0, [['text', 'text_question_id', 'Text question label']]);
         this.populateFromArray(groupStartIndex + 2, 0, [['end group', '', '']]);
+      },
+    },
+    insert_repeat: {
+      name: 'Insert repeat',
+      callback: function callback() {
+        var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
+        this.alter('insert_row_below', latestSelection.row, 3, 'ContextMenu.rowBelow');
+
+        var repeatStartIndex = latestSelection.row + 1;
+        this.populateFromArray(repeatStartIndex, 0, [['begin repeat', 'repeat_id', '']]);
+        this.populateFromArray(repeatStartIndex + 1, 0, [['text', 'text_question_id', 'Text question label']]);
+        this.populateFromArray(repeatStartIndex + 2, 0, [['end repeat', '', '']]);
       },
     },
     sp0: ContextMenu.SEPARATOR,

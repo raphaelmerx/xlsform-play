@@ -170,8 +170,8 @@ function App() {
     <Allotment defaultSizes={[100, 200]} className="scrollable-allotment">
       <Allotment.Pane minSize={200} preferredSize="80%">
         <div className="App">
-          <Grid container spacing={1} direction="row" alignItems={'center'} marginBottom={2}>
-            <Grid item md={2} xs={4} textAlign={'center'}>
+          <Grid container spacing={1} direction="row" alignItems={'center'} marginBottom={2} marginLeft={2}>
+            <Grid item md={2} xs={4} textAlign={'left'}>
               <input
                 accept=".xls,.xlsx"
                 style={{ display: 'none' }}
@@ -185,13 +185,14 @@ function App() {
                 </Button>
               </label>
             </Grid>
-            <Grid item md={1} xs={2} textAlign={'center'}>
+            <Grid item md={1} xs={2} textAlign={'left'}>
               <Box> OR </Box>
             </Grid>
-            <Grid item md={5} xs={7} textAlign={'center'}>
-              <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+            <Grid item md={5} xs={7} textAlign={'left'}>
+              <FormControl variant="standard" sx={{ m: 1, minWidth: 200 }}>
                 <InputLabel id="example-file-select">Select an example file</InputLabel>
                 <Select labelId="example-file-select" value={selectedFile} onChange={handleSelectChange}>
+                  <MenuItem value="starter.xlsx">starter.xlsx</MenuItem>
                   <MenuItem value="anc_visit.xlsx">anc_visit.xlsx</MenuItem>
                   <MenuItem value="baseline_household_survey.xlsx">baseline_household_survey.xlsx</MenuItem>
                   <MenuItem value="fatal_injury_surveillance_form.xlsx">fatal_injury_surveillance_form.xlsx</MenuItem>
