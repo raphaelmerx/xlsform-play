@@ -239,6 +239,7 @@ function App() {
                   colWidths={colWidths[sheetName]}
                   licenseKey="non-commercial-and-evaluation" // for non-commercial use only
                   dropdownMenu={true}
+                  manualColumnMove={true}
                   manualRowMove={true}
                   manualColumnResize={true}
                   fixedRowsTop={1}
