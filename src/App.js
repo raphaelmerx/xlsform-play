@@ -80,25 +80,6 @@ function App() {
     setQuestionIds(newQuestionIds);
   };
 
-  const columnConfigGetter = i => {
-    if (i === 0) {
-      return {
-        type: 'autocomplete',
-        source: question_type_autocomplete,
-      };
-    } else if (i >= 2) {
-      return {
-        type: 'autocomplete',
-        source: function (query, process) {
-          if (query.startsWith('${')) {
-            process(questionIds.map(value => '${' + value + '}'));
-          }
-        },
-      };
-    }
-    return {};
-  };
-
   const handleFileUpload = e => {
     const file = e.target.files[0];
     const reader = new FileReader();
@@ -255,7 +236,6 @@ function App() {
                   rowHeaders={true}
                   colHeaders={true}
                   height="100vh"
-                  columns={columnConfigGetter}
                   colWidths={colWidths[sheetName]}
                   licenseKey="non-commercial-and-evaluation" // for non-commercial use only
                   dropdownMenu={true}
