@@ -46,16 +46,6 @@ const getSheetsData = file => {
   return { sheetsData, sheetColumnWidths };
 };
 
-const columnConfigGetter = i => {
-  if (i === 0) {
-    return {
-      type: 'autocomplete',
-      source: question_type_autocomplete,
-    };
-  }
-  return {};
-};
-
 function beginGroupRowRenderer(instance, td, row, col, prop, value, cellProperties) {
   textRenderer.apply(this, arguments); // Use the default text renderer first
 
@@ -75,6 +65,35 @@ function App() {
   const [colWidths, setColWidths] = useState({});
   const [selectedFile, setSelectedFile] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
+  const [questionIds, setQuestionIds] = useState([]);
+
+  const updateQuestionIds = () => {
+    const newQuestionIds = hotData['survey']
+      ?.slice(1)
+      .map(row => row[1])
+      .reverse();
+
+    setQuestionIds(newQuestionIds);
+  };
+
+  const columnConfigGetter = i => {
+    if (i === 0) {
+      return {
+        type: 'autocomplete',
+        source: question_type_autocomplete,
+      };
+    } else if (i >= 2) {
+      return {
+        type: 'autocomplete',
+        source: function (query, process) {
+          if (query.startsWith('${')) {
+            process(questionIds.map(value => '${' + value + '}'));
+          }
+        },
+      };
+    }
+    return {};
+  };
 
   const handleFileUpload = e => {
     const file = e.target.files[0];
@@ -249,6 +268,16 @@ function App() {
                     return cellProperties;
                   }}
                   contextMenu={sheetName === 'survey' ? surveyContextMenu : true}
+                  afterInit={updateQuestionIds}
+                  afterChange={(changes, source) => {
+                    changes?.forEach(([row, prop, oldValue, newValue]) => {
+                      // If the change was made in the second column (prop === 1)
+                      // and the change was not caused by the 'loadData' source
+                      if (prop === 1 && source !== 'loadData') {
+                        updateQuestionIds();
+                      }
+                    });
+                  }}
                 />
               </TabPanel>
             ))}
