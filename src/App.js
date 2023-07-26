@@ -25,7 +25,7 @@ import { question_type_autocomplete, surveyContextMenu } from './utils';
 registerAllModules();
 
 const getSheetsData = file => {
-  const wb = read(file, { type: 'binary', cellStyles: true });
+  const wb = read(file, { type: 'binary', cellStyles: true, dense: true });
 
   // Get all worksheets
   const sheetNames = wb.SheetNames;
@@ -35,7 +35,7 @@ const getSheetsData = file => {
   sheetNames.forEach(name => {
     const ws = wb.Sheets[name];
 
-    const colsWidths = ws['!cols']?.map(col => col?.wpx || 100) || [];
+    const colsWidths = ws['!cols']?.map(col => col?.wpx / 2 || 100) || [];
     sheetColumnWidths[name] = colsWidths;
 
     let data = utils.sheet_to_json(ws, { header: 1 });
