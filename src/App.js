@@ -35,7 +35,8 @@ const getSheetsData = file => {
   sheetNames.forEach(name => {
     const ws = wb.Sheets[name];
 
-    const colsWidths = ws['!cols']?.map(col => col?.wpx / 2 || 100) || [];
+    // minimum of colwidth and 100
+    const colsWidths = ws['!cols']?.map(col => Math.max(col?.wpx / 2, 100) || 100) || [];
     sheetColumnWidths[name] = colsWidths;
 
     let data = utils.sheet_to_json(ws, { header: 1 });
@@ -252,6 +253,19 @@ function App() {
                       )
                     ) {
                       cellProperties.renderer = 'beginGroupRowRenderer';
+                    }
+
+                    // autocomplete
+                    if (col === 0) {
+                      cellProperties.type = 'autocomplete';
+                      cellProperties.source = question_type_autocomplete;
+                    } else if (col >= 2) {
+                      cellProperties.type = 'autocomplete';
+                      cellProperties.source = function (query, process) {
+                        if (query.includes('${')) {
+                          process(questionIds.map(value => '${' + value + '}'));
+                        }
+                      };
                     }
 
                     return cellProperties;
