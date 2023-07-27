@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { BaseHotTable, SurveyHotTable, ChoicesHotTable } from './HotTable';
+import { BaseHotTable, SurveyHotTable, ChoicesHotTable, beginGroupRowRenderer } from './HotTable';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { registerAllModules } from 'handsontable/registry';
-import { registerRenderer, textRenderer } from 'handsontable/renderers';
+import { registerRenderer } from 'handsontable/renderers';
 
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -21,24 +21,7 @@ import { constructSpreadsheet, getSheetsData } from './utils';
 import { saveAs } from 'file-saver';
 
 registerAllModules();
-
-function beginGroupRowRenderer(instance, td, row, col, prop, value, cellProperties) {
-  textRenderer.apply(this, arguments); // Use the default text renderer first
-
-  const rowData = instance.getDataAtRow(row); // Get data for the row
-
-  if (rowData[0] === 'begin group') {
-    td.style.backgroundColor = '#FDE9D9';
-  } else if (rowData[0] === 'end group') {
-    td.style.backgroundColor = '#FEF4EC';
-  } else if (rowData[0] === 'begin repeat') {
-    td.style.backgroundColor = '#E5DFEC';
-  } else if (rowData[0] === 'end repeat') {
-    td.style.backgroundColor = '#F5F2F7';
-  }
-}
-
-registerRenderer('beginGroupRowRenderer', beginGroupRowRenderer); // Register the renderer
+registerRenderer('beginGroupRowRenderer', beginGroupRowRenderer);
 
 function App() {
   const [hotData, setHotData] = useState({});
@@ -68,6 +51,7 @@ function App() {
 
   React.useEffect(() => {
     updateListNames();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hotData.choices]);
 
   const handleFileUpload = e => {
@@ -216,7 +200,7 @@ function App() {
                   <ChoicesHotTable
                     data={hotData[sheetName]}
                     colWidths={colWidths[sheetName]}
-                    updateChoices={updateListNames}
+                    updateListNames={updateListNames}
                   />
                 ) : (
                   <BaseHotTable data={hotData[sheetName]} />
