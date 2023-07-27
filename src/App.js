@@ -46,6 +46,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const [questionIds, setQuestionIds] = useState([]);
+  const [listNames, setListNames] = useState([]);
 
   const updateQuestionIds = () => {
     const newQuestionIds = hotData['survey']
@@ -56,6 +57,18 @@ function App() {
 
     setQuestionIds(newQuestionIds);
   };
+
+  const updateListNames = () => {
+    const newChoices = hotData['choices']
+      ?.slice(1)
+      .map(row => row[0])
+      .filter(Boolean);
+    setListNames([...new Set(newChoices)]);
+  };
+
+  React.useEffect(() => {
+    updateListNames();
+  }, [hotData.choices]);
 
   const handleFileUpload = e => {
     const file = e.target.files[0];
@@ -197,9 +210,14 @@ function App() {
                     colWidths={colWidths[sheetName]}
                     updateQuestionIds={updateQuestionIds}
                     questionIds={questionIds}
+                    listNames={listNames}
                   />
                 ) : sheetName === 'choices' ? (
-                  <ChoicesHotTable data={hotData[sheetName]} colWidths={colWidths[sheetName]} />
+                  <ChoicesHotTable
+                    data={hotData[sheetName]}
+                    colWidths={colWidths[sheetName]}
+                    updateChoices={updateListNames}
+                  />
                 ) : (
                   <BaseHotTable data={hotData[sheetName]} />
                 )}

@@ -30,7 +30,7 @@ const createCallbackInsertRow = row => {
   };
 };
 
-export const SurveyHotTable = ({ data, colWidths, updateQuestionIds, questionIds }) => {
+export const SurveyHotTable = ({ data, colWidths, updateQuestionIds, questionIds, listNames }) => {
   const surveyContextMenu = {
     items: {
       insert_question: {
@@ -132,7 +132,7 @@ export const SurveyHotTable = ({ data, colWidths, updateQuestionIds, questionIds
       // autocomplete using question ids
       if (col === 0) {
         cellProperties.type = 'autocomplete';
-        cellProperties.source = xlsform_question_types;
+        cellProperties.source = xlsform_question_types.concat(listNames.map(listName => `select_one ${listName}`));
       } else if (col >= 2) {
         cellProperties.type = 'autocomplete';
         cellProperties.source = function (query, process) {
@@ -163,4 +163,18 @@ export const SurveyHotTable = ({ data, colWidths, updateQuestionIds, questionIds
   );
 };
 
-export const ChoicesHotTable = ({ data, colWidths }) => <BaseHotTable data={data} colWidths={colWidths} />;
+export const ChoicesHotTable = ({ data, colWidths, updateListNames }) => {
+  return (
+    <BaseHotTable
+      data={data}
+      colWidths={colWidths}
+      afterChange={(changes, source) => {
+        changes?.forEach(([row, prop, oldValue, newValue]) => {
+          if (prop === 1 && source !== 'loadData') {
+            updateListNames();
+          }
+        });
+      }}
+    />
+  );
+};
