@@ -1,6 +1,6 @@
-import { ContextMenu } from 'handsontable/plugins/contextMenu';
+import { read, utils, write } from 'xlsx';
 
-export const question_type_autocomplete = [
+export const xlsform_question_types = [
   'start',
   'end',
   'today',
@@ -41,102 +41,42 @@ export const question_type_autocomplete = [
   'end repeat',
 ];
 
-const createCallbackInsertRow = row => {
-  return function () {
-    var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
-    this.alter('insert_row_below', latestSelection.row, 1, 'ContextMenu.rowBelow');
-    var newRowIndex = latestSelection.row + 1;
-    this.populateFromArray(newRowIndex, 0, [row]);
-  };
+export const getSheetsData = file => {
+  const wb = read(file, { type: 'binary', cellStyles: true, dense: true });
+
+  // Get all worksheets
+  const sheetNames = wb.SheetNames;
+  let sheetsData = {};
+  let sheetColumnWidths = {};
+
+  sheetNames.forEach(name => {
+    const ws = wb.Sheets[name];
+
+    // minimum of colwidth and 100
+    const colsWidths = ws['!cols']?.map(col => Math.max(col?.wpx / 2, 100) || 100) || [];
+    sheetColumnWidths[name] = colsWidths;
+
+    let data = utils.sheet_to_json(ws, { header: 1 });
+    data = data.filter(row => row.length);
+
+    sheetsData[name] = data;
+  });
+  return { sheetsData, sheetColumnWidths };
 };
 
-/**
- *
- */
-export const surveyContextMenu = {
-  items: {
-    insert_question: {
-      name: 'Insert question',
-      submenu: {
-        items: [
-          {
-            key: 'insert_question:text',
-            name: 'Text',
-            callback: createCallbackInsertRow(['text', 'question_id', 'Question Label']),
-          },
-          {
-            key: 'insert_question:select_one',
-            name: 'Select one',
-            callback: createCallbackInsertRow(['select_one [list_name]', 'question_id', 'Question Label']),
-          },
-          {
-            key: 'insert_question:geopoint',
-            name: 'GPS point',
-            callback: createCallbackInsertRow(['geopoint', 'store_gps', 'Collect the GPS coordinates of this store']),
-          },
-          {
-            key: 'insert_question:geotrace',
-            name: 'GPS trace',
-            callback: createCallbackInsertRow(['geotrace', 'pipe', 'Pipeline']),
-          },
-          {
-            key: 'insert_question:image',
-            name: 'Image',
-            callback: createCallbackInsertRow(['image', 'img', 'Upload an image']),
-          },
-          {
-            key: 'insert_question:audio',
-            name: 'Audio',
-            callback: createCallbackInsertRow(['audio', 'animal_sound', 'Upload an audio']),
-          },
-        ],
-      },
-    },
-    insert_group: {
-      name: 'Insert group',
-      callback: function callback() {
-        var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
-        this.alter('insert_row_below', latestSelection.row, 3, 'ContextMenu.rowBelow');
+export const constructSpreadsheet = worksheets => {
+  const wb = utils.book_new();
 
-        var groupStartIndex = latestSelection.row + 1;
-        this.populateFromArray(groupStartIndex, 0, [['begin group', 'group_id', 'Group label']]);
-        this.populateFromArray(groupStartIndex + 1, 0, [['text', 'text_question_id', 'Text question label']]);
-        this.populateFromArray(groupStartIndex + 2, 0, [['end group', '', '']]);
-      },
-    },
-    insert_repeat: {
-      name: 'Insert repeat',
-      callback: function callback() {
-        var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
-        this.alter('insert_row_below', latestSelection.row, 3, 'ContextMenu.rowBelow');
+  Object.keys(worksheets).forEach(sheetName => {
+    const ws = utils.aoa_to_sheet(worksheets[sheetName]);
+    utils.book_append_sheet(wb, ws, sheetName);
+  });
 
-        var repeatStartIndex = latestSelection.row + 1;
-        this.populateFromArray(repeatStartIndex, 0, [['begin repeat', 'repeat_id', '']]);
-        this.populateFromArray(repeatStartIndex + 1, 0, [['text', 'text_question_id', 'Text question label']]);
-        this.populateFromArray(repeatStartIndex + 2, 0, [['end repeat', '', '']]);
-      },
-    },
-    sp0: ContextMenu.SEPARATOR,
-    row_above: {},
-    row_below: {},
-    sp1: ContextMenu.SEPARATOR,
-    col_left: {},
-    col_right: {},
-    sp2: ContextMenu.SEPARATOR,
-    remove_row: {},
-    remove_col: {},
-    sp3: ContextMenu.SEPARATOR,
-    undo: {},
-    redo: {},
-    sp4: ContextMenu.SEPARATOR,
-    alignment: {},
-    copy: {},
-    cut: {},
-    clear_custom: {
-      name: 'Clear all cells (custom)',
-      callback: function () {
-        this.clear();
-      },
-    },
-  },
+  const wbout = write(wb, { bookType: 'xlsx', bookSST: true, type: 'binary' });
+  const buf = new ArrayBuffer(wbout.length);
+  const view = new Uint8Array(buf);
+
+  for (let i = 0; i < wbout.length; i++) view[i] = wbout.charCodeAt(i) & 0xff;
+  const fileBlob = new Blob([buf], { type: 'application/octet-stream' });
+  return fileBlob;
 };

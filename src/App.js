@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HotTable } from '@handsontable/react';
+import { BaseHotTable, SurveyHotTable, ChoicesHotTable } from './HotTable';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import { registerAllModules } from 'handsontable/registry';
 import { registerRenderer, textRenderer } from 'handsontable/renderers';
@@ -17,35 +17,10 @@ import 'allotment/dist/style.css';
 
 import 'handsontable/dist/handsontable.full.min.css';
 import 'react-tabs/style/react-tabs.css';
-import { read, utils, write } from 'xlsx';
+import { constructSpreadsheet, getSheetsData } from './utils';
 import { saveAs } from 'file-saver';
 
-import { question_type_autocomplete, surveyContextMenu } from './utils';
-
 registerAllModules();
-
-const getSheetsData = file => {
-  const wb = read(file, { type: 'binary', cellStyles: true, dense: true });
-
-  // Get all worksheets
-  const sheetNames = wb.SheetNames;
-  let sheetsData = {};
-  let sheetColumnWidths = {};
-
-  sheetNames.forEach(name => {
-    const ws = wb.Sheets[name];
-
-    // minimum of colwidth and 100
-    const colsWidths = ws['!cols']?.map(col => Math.max(col?.wpx / 2, 100) || 100) || [];
-    sheetColumnWidths[name] = colsWidths;
-
-    let data = utils.sheet_to_json(ws, { header: 1 });
-    data = data.filter(row => row.length);
-
-    sheetsData[name] = data;
-  });
-  return { sheetsData, sheetColumnWidths };
-};
 
 function beginGroupRowRenderer(instance, td, row, col, prop, value, cellProperties) {
   textRenderer.apply(this, arguments); // Use the default text renderer first
@@ -76,6 +51,7 @@ function App() {
     const newQuestionIds = hotData['survey']
       ?.slice(1)
       .map(row => row[1])
+      .filter(Boolean)
       .reverse();
 
     setQuestionIds(newQuestionIds);
@@ -114,30 +90,13 @@ function App() {
     reader.readAsArrayBuffer(file);
   };
 
-  const constructSpreadsheet = () => {
-    const wb = utils.book_new();
-
-    Object.keys(hotData).forEach(sheetName => {
-      const ws = utils.aoa_to_sheet(hotData[sheetName]);
-      utils.book_append_sheet(wb, ws, sheetName);
-    });
-
-    const wbout = write(wb, { bookType: 'xlsx', bookSST: true, type: 'binary' });
-    const buf = new ArrayBuffer(wbout.length);
-    const view = new Uint8Array(buf);
-
-    for (let i = 0; i < wbout.length; i++) view[i] = wbout.charCodeAt(i) & 0xff;
-    const fileBlob = new Blob([buf], { type: 'application/octet-stream' });
-    return fileBlob;
-  };
-
   const handleFileDownload = () => {
-    const fileBlob = constructSpreadsheet();
+    const fileBlob = constructSpreadsheet(hotData);
     saveAs(fileBlob, 'spreadsheet.xlsx');
   };
 
   const handleFilePreview = async () => {
-    const fileBlob = constructSpreadsheet();
+    const fileBlob = constructSpreadsheet(hotData);
 
     let formData = new FormData();
     formData.append('file', fileBlob, 'spreadsheet.xlsx');
@@ -232,56 +191,18 @@ function App() {
             </TabList>
             {Object.keys(hotData).map(sheetName => (
               <TabPanel key={`${selectedFile}_${sheetName}`}>
-                <HotTable
-                  data={hotData[sheetName]}
-                  rowHeaders={true}
-                  colHeaders={true}
-                  height="100vh"
-                  colWidths={colWidths[sheetName]}
-                  licenseKey="non-commercial-and-evaluation" // for non-commercial use only
-                  dropdownMenu={true}
-                  manualColumnMove={true}
-                  manualRowMove={true}
-                  manualColumnResize={true}
-                  fixedRowsTop={1}
-                  cells={function (row, col) {
-                    const cellProperties = {};
-
-                    if (
-                      ['begin group', 'begin repeat', 'end group', 'end repeat'].indexOf(
-                        this.instance.getDataAtCell(row, 0) > -1,
-                      )
-                    ) {
-                      cellProperties.renderer = 'beginGroupRowRenderer';
-                    }
-
-                    // autocomplete
-                    if (col === 0) {
-                      cellProperties.type = 'autocomplete';
-                      cellProperties.source = question_type_autocomplete;
-                    } else if (col >= 2) {
-                      cellProperties.type = 'autocomplete';
-                      cellProperties.source = function (query, process) {
-                        if (query.includes('${')) {
-                          process(questionIds.map(value => '${' + value + '}'));
-                        }
-                      };
-                    }
-
-                    return cellProperties;
-                  }}
-                  contextMenu={sheetName === 'survey' ? surveyContextMenu : true}
-                  afterInit={updateQuestionIds}
-                  afterChange={(changes, source) => {
-                    changes?.forEach(([row, prop, oldValue, newValue]) => {
-                      // If the change was made in the second column (prop === 1)
-                      // and the change was not caused by the 'loadData' source
-                      if (prop === 1 && source !== 'loadData') {
-                        updateQuestionIds();
-                      }
-                    });
-                  }}
-                />
+                {sheetName === 'survey' ? (
+                  <SurveyHotTable
+                    data={hotData[sheetName]}
+                    colWidths={colWidths[sheetName]}
+                    updateQuestionIds={updateQuestionIds}
+                    questionIds={questionIds}
+                  />
+                ) : sheetName === 'choices' ? (
+                  <ChoicesHotTable data={hotData[sheetName]} colWidths={colWidths[sheetName]} />
+                ) : (
+                  <BaseHotTable data={hotData[sheetName]} />
+                )}
               </TabPanel>
             ))}
           </Tabs>
