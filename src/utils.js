@@ -41,27 +41,55 @@ export const question_type_autocomplete = [
   'end repeat',
 ];
 
+const createCallbackInsertRow = row => {
+  return function () {
+    var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
+    this.alter('insert_row_below', latestSelection.row, 1, 'ContextMenu.rowBelow');
+    var newRowIndex = latestSelection.row + 1;
+    this.populateFromArray(newRowIndex, 0, [row]);
+  };
+};
+
 /**
  *
  */
 export const surveyContextMenu = {
   items: {
-    insert_text_question: {
-      name: 'Insert text question',
-      callback: function callback() {
-        var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
-        this.alter('insert_row_below', latestSelection.row, 1, 'ContextMenu.rowBelow');
-        var newRowIndex = latestSelection.row + 1;
-        this.populateFromArray(newRowIndex, 0, [['text', 'question_id', 'Question Label']]);
-      },
-    },
-    insert_select_one_question: {
-      name: 'Insert select one question',
-      callback: function callback() {
-        var latestSelection = this.getSelectedRangeLast().getBottomRightCorner();
-        this.alter('insert_row_below', latestSelection.row, 1, 'ContextMenu.rowBelow');
-        var newRowIndex = latestSelection.row + 1;
-        this.populateFromArray(newRowIndex, 0, [['select_one [list_name]', 'question_id', 'Question Label']]);
+    insert_question: {
+      name: 'Insert question',
+      submenu: {
+        items: [
+          {
+            key: 'insert_question:text',
+            name: 'Text',
+            callback: createCallbackInsertRow(['text', 'question_id', 'Question Label']),
+          },
+          {
+            key: 'insert_question:select_one',
+            name: 'Select one',
+            callback: createCallbackInsertRow(['select_one [list_name]', 'question_id', 'Question Label']),
+          },
+          {
+            key: 'insert_question:geopoint',
+            name: 'GPS point',
+            callback: createCallbackInsertRow(['geopoint', 'store_gps', 'Collect the GPS coordinates of this store']),
+          },
+          {
+            key: 'insert_question:geotrace',
+            name: 'GPS trace',
+            callback: createCallbackInsertRow(['geotrace', 'pipe', 'Pipeline']),
+          },
+          {
+            key: 'insert_question:image',
+            name: 'Image',
+            callback: createCallbackInsertRow(['image', 'img', 'Upload an image']),
+          },
+          {
+            key: 'insert_question:audio',
+            name: 'Audio',
+            callback: createCallbackInsertRow(['audio', 'animal_sound', 'Upload an audio']),
+          },
+        ],
       },
     },
     insert_group: {
